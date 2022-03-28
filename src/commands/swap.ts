@@ -22,6 +22,7 @@ interface SwapArgs {
   priceThreshold?: string;
   slippage?: number;
   onlyDirectRoutes?: boolean;
+  routeCacheDurationMs?: number;
 }
 
 let jupiter: Jupiter;
@@ -114,20 +115,21 @@ export async function swapCommand(args: SwapArgs): Promise<string> {
 
   // load Jupiter once for this from/to pair
   if (!jupiter) {
-
+    logger.info("loading jupiter")
     jupiter = await Jupiter.load({
       connection,
       cluster: "mainnet-beta",
       user: keypair,
+      routeCacheDuration: args.routeCacheDurationMs ?? 5000, // defaults to 5000ms (5s)
     });
-
+    logger.info("loading routemap")
     const routeMap = jupiter.getRouteMap();
-
+    logger.info("parsing routemap")
     const possiblePairs = routeMap.get(fromToken.mint);
     if (!possiblePairs?.filter((i) => i === toToken.mint).length) {
       throw new Error(`could not find route map for ${args.from}-${args.to}`);
     }
-
+    logger.info("finished loading jupiter")
   }
 
   // Calculate routes for swapping [amount] [from] to [to] with 2% slippage

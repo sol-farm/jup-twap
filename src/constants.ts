@@ -3,7 +3,7 @@ export const ENV = {
   walletPK: process.env.WALLET_PK ?? "",
 };
 
-interface TokenInfo {
+export interface TokenInfo {
   name: string;
   mint: string;
   symbol: string;
@@ -31,4 +31,11 @@ export const TOKENS: Record<string, TokenInfo> = {
     decimals: 6,
     coinGeckoID: "parrot-protocol",
   },
+  TULIP: {
+    name: "Tulip Protocol",
+    mint: "TuLipcqtGVXP9XR62wM8WWCm6a9vhLs7T1uoWBk6FDs",
+    symbol: "TULIP",
+    decimals: 6,
+    coinGeckoID: "solfarm",
+  }
 };
