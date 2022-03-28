@@ -3,3 +3,5 @@ dist
 id.json
 lib/
 .env
+
+*.gz

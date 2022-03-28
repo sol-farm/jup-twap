@@ -9,7 +9,7 @@ import {
 import { getTokenPrice } from "../coingecko";
 
 import { connection, keypair } from "../connection";
-import { TOKENS } from "../constants";
+import { TOKENS, TokenInfo } from "../constants";
 import { logger } from "../logger";
 import { transferToken } from "../utils/transferToken";
 
@@ -21,15 +21,13 @@ interface SwapArgs {
   transferThreshold?: string;
   priceThreshold?: string;
   slippage?: number;
+  routeCacheMs?: number;
 }
 
-let jupiter: Jupiter;
 
 const transferTokenAccounts: Record<string, PublicKey> = {};
 
-export async function swapCommand(args: SwapArgs): Promise<string> {
-  const fromToken = TOKENS[args.from];
-  const toToken = TOKENS[args.to];
+export async function swapCommand(args: SwapArgs, jupiter: Jupiter, fromToken: TokenInfo, toToken: TokenInfo): Promise<string> {
 
   if (!fromToken) {
     throw new Error(`token ${args.from} not found in TOKENS config`);
@@ -63,7 +61,39 @@ export async function swapCommand(args: SwapArgs): Promise<string> {
       `from balance not enough for swap, need ${swapAmount} ${fromToken.symbol} only have ${fromBalance} ${fromToken.symbol}`
     );
   }
+  const routeMap = jupiter.getRouteMap();
+  //const possiblePairs = routeMap.get(fromToken.mint);
+  //if (!possiblePairs?.filter((i) => i === toToken.mint).length) {
+  //  throw new Error(`could not find route map for ${args.from}-${args.to}`);
+  //}
 
+  // Calculate routes for swapping [amount] [from] to [to] with 2% slippage
+  // routes are sorted based on outputAmount, so ideally the first route is the best.
+  const routes = await jupiter.computeRoutes(
+    new PublicKey(fromToken.mint),
+    new PublicKey(toToken.mint),
+    swapAmount,
+    args.slippage ?? 3,
+    true,
+  );
+
+
+
+  if (!routes?.routesInfos?.length) {
+    throw new Error(`could not find route for ${args.from}-${args.to}`);
+  }
+
+  // Prepare execute exchange
+  const { execute } = await jupiter.exchange({
+    route: routes.routesInfos[0],
+  });
+
+  // Swap execute
+  const swapResult: any = await execute();
+
+  if (swapResult.error) {
+    throw new Error(`swap result error: ${swapResult}`);
+  }
   // Check transfer balance
   if (
     toBalance &&
@@ -81,8 +111,7 @@ export async function swapCommand(args: SwapArgs): Promise<string> {
       transferTokenAccounts[toToken.mint] = transferTokenAccount;
     }
     logger.info(
-      `transfer threshold reached, transferring ${
-        toToken.symbol
+      `transfer threshold reached, transferring ${toToken.symbol
       } (${toBalance}) to ${transferTokenAccount.toBase58()}`
     );
     try {
@@ -96,60 +125,5 @@ export async function swapCommand(args: SwapArgs): Promise<string> {
       logger.error(`transfer balance error: ${error}`);
     }
   }
-
-  // Check we reach the price to start swap
-  if (priceThreshold > 0 && toToken.coinGeckoID) {
-    try {
-      const currentPrice = await getTokenPrice(toToken.coinGeckoID);
-      if (currentPrice > priceThreshold) {
-        logger.info(
-          `current price ${currentPrice} is greater than ${args.priceThreshold}, skip swap for now`
-        );
-        return "";
-      }
-    } catch (error) {
-      throw new Error(`price threshold check error: ${error}`);
-    }
-  }
-
-  // load Jupiter once for this from/to pair
-  if (!jupiter) {
-    jupiter = await Jupiter.load({
-      connection,
-      cluster: "mainnet-beta",
-      user: keypair,
-    });
-    const routeMap = jupiter.getRouteMap();
-    const possiblePairs = routeMap.get(fromToken.mint);
-    if (!possiblePairs?.filter((i) => i === toToken.mint).length) {
-      throw new Error(`could not find route map for ${args.from}-${args.to}`);
-    }
-  }
-
-  // Calculate routes for swapping [amount] [from] to [to] with 2% slippage
-  // routes are sorted based on outputAmount, so ideally the first route is the best.
-  const routes = await jupiter.computeRoutes(
-    new PublicKey(fromToken.mint),
-    new PublicKey(toToken.mint),
-    swapAmount,
-    args.slippage ?? 2
-  );
-
-  if (!routes?.routesInfos?.length) {
-    throw new Error(`could not find route for ${args.from}-${args.to}`);
-  }
-
-  // Prepare execute exchange
-  const { execute } = await jupiter.exchange({
-    route: routes.routesInfos[0],
-  });
-
-  // Swap execute
-  const swapResult: any = await execute();
-
-  if (swapResult.error) {
-    throw new Error(`swap result error: ${swapResult}`);
-  }
-
   return swapResult.txid;
 }

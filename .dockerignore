@@ -1,3 +1,6 @@
+docker-compose.yml
 node_modules
 .vscode
 .git
+tulip_protocol_jup_twap.tar
+tulip_protocol_jup_twap.tar.gz
