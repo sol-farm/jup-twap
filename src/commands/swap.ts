@@ -27,7 +27,12 @@ interface SwapArgs {
 
 const transferTokenAccounts: Record<string, PublicKey> = {};
 
-export async function swapCommand(args: SwapArgs, jupiter: Jupiter, fromToken: TokenInfo, toToken: TokenInfo): Promise<string> {
+export async function swapCommand(
+  args: SwapArgs,
+  jupiter: Jupiter,
+  fromToken: TokenInfo,
+  toToken: TokenInfo,
+): Promise<string> {
 
   if (!fromToken) {
     throw new Error(`token ${args.from} not found in TOKENS config`);
@@ -69,13 +74,13 @@ export async function swapCommand(args: SwapArgs, jupiter: Jupiter, fromToken: T
 
   // Calculate routes for swapping [amount] [from] to [to] with 2% slippage
   // routes are sorted based on outputAmount, so ideally the first route is the best.
-  const routes = await jupiter.computeRoutes(
-    new PublicKey(fromToken.mint),
-    new PublicKey(toToken.mint),
-    swapAmount,
-    args.slippage ?? 3,
-    true,
-  );
+  const routes = await jupiter.computeRoutes({
+    inputMint: new PublicKey(fromToken.mint),
+    outputMint: new PublicKey(toToken.mint),
+    inputAmount: swapAmount,
+    onlyDirectRoutes: true,
+    slippage: args.slippage ?? 3,
+  });
 
 
 
@@ -85,7 +90,7 @@ export async function swapCommand(args: SwapArgs, jupiter: Jupiter, fromToken: T
 
   // Prepare execute exchange
   const { execute } = await jupiter.exchange({
-    route: routes.routesInfos[0],
+    routeInfo: routes.routesInfos[0],
   });
 
   // Swap execute
