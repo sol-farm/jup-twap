@@ -22,7 +22,7 @@ interface SwapArgs {
   priceThreshold?: string;
   slippage?: number;
   onlyDirectRoutes?: boolean;
-  routeCacheDurationMs?: number;
+  routeCacheDuration?: number;
 }
 
 let jupiter: Jupiter;
@@ -120,7 +120,7 @@ export async function swapCommand(args: SwapArgs): Promise<string> {
       connection,
       cluster: "mainnet-beta",
       user: keypair,
-      routeCacheDuration: args.routeCacheDurationMs ?? 5000, // defaults to 5000ms (5s)
+      routeCacheDuration: 5000 // defaults to 5000ms (5s)
     });
     logger.info("loading routemap")
     const routeMap = jupiter.getRouteMap();
@@ -131,7 +131,7 @@ export async function swapCommand(args: SwapArgs): Promise<string> {
     }
     logger.info("finished loading jupiter")
   }
-
+  logger.info(`direction routes ${args.onlyDirectRoutes}`)
   // Calculate routes for swapping [amount] [from] to [to] with 2% slippage
   // routes are sorted based on outputAmount, so ideally the first route is the best.
   const routes = await jupiter.computeRoutes({
@@ -139,7 +139,8 @@ export async function swapCommand(args: SwapArgs): Promise<string> {
     outputMint: new PublicKey(toToken.mint),
     inputAmount: swapAmount,
     slippage: args.slippage ?? 2,
-    onlyDirectRoutes: args.onlyDirectRoutes ?? true,
+    feeBps: 0,
+    onlyDirectRoutes: false,
   });
 
   if (!routes?.routesInfos?.length) {

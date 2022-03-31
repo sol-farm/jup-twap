@@ -24,6 +24,12 @@ export const TOKENS: Record<string, TokenInfo> = {
     symbol: "USDC",
     decimals: 6,
   },
+  USDT: {
+    name: "USDT",
+    mint: "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+    symbol: "USDt",
+    decimals: 6,
+  },
   PRT: {
     name: "PRT",
     mint: "PRT88RkA4Kg5z7pKnezeNH4mafTvtQdfFgpQTGRjz44",

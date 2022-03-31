@@ -22,7 +22,8 @@ cli
   .option("--transferAddress <transferAddress>")
   .option("--transferThreshold <transferThreshold>")
   .option("--priceThreshold <priceThreshold>")
-  .option("--onlyDirectRoutes", "swap without any intermediary paths", true)
+  .option("--onlyDirectRoutes", "swap without any intermediary paths", false)
+  .option("--routeCacheDuration <durationMs>")
   .option("--dryRun", "dry run", false)
   .action(
     async (options: {
@@ -35,6 +36,7 @@ cli
       priceThreshold?: string;
       dryRun: boolean;
       onlyDirectRoutes: boolean,
+      routeCacheDuration?: number,
     }) => {
       logger.info(`using wallet ${keypair.publicKey}`);
 
@@ -45,9 +47,8 @@ cli
       );
 
       logger.info(
-        `twap swap of ${options.amount} from ${options.from} to ${options.to} every ${options.interval} ready`
+        `twap swap of ${options.amount} from ${options.from} to ${options.to} every ${options.interval} ready. directRoutes ${options.onlyDirectRoutes}`
       );
-
       const runSwap = () => {
         logger.info(`swap starting...`);
         swapCommand(options)
