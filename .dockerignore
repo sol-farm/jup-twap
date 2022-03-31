@@ -1,3 +1,7 @@
 node_modules
 .vscode
 .git
+docker-compose.yml
+**/*.md
+**/*.yml
+**/*.yaml
