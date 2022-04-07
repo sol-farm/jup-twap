@@ -76,10 +76,7 @@ export async function swapCommand(args: SwapArgs): Promise<string> {
   ) {
     let transferTokenAccount = transferTokenAccounts[toToken.mint];
     if (!transferTokenAccount) {
-      transferTokenAccount = await getTokenAccountAddress(
-        new PublicKey(args.transferAddress),
-        new PublicKey(toToken.mint)
-      );
+      transferTokenAccount = new PublicKey(args.transferAddress);
       transferTokenAccounts[toToken.mint] = transferTokenAccount;
     }
     logger.info(
