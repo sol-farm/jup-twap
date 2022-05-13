@@ -135,7 +135,7 @@ export async function swapCommand(args: SwapArgs): Promise<string> {
     inputMint: new PublicKey(fromToken.mint),
     outputMint: new PublicKey(toToken.mint),
     inputAmount: swapAmount,
-    slippage: args.slippage ?? 2,
+    slippage: 5, // hardcode slippage to 5
     feeBps: 0,
     onlyDirectRoutes: false,
   });
