@@ -153,7 +153,7 @@ export async function swapCommand(args: SwapArgs): Promise<string> {
   const swapResult: any = await execute();
 
   if (swapResult.error) {
-    throw new Error(`swap result error: ${swapResult}`);
+    throw new Error(`swap result error: ${swapResult.error}`);
   }
 
   return swapResult.txid;

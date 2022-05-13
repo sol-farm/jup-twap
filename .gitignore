@@ -3,3 +3,7 @@ dist
 id.json
 lib/
 .env
+
+docker-compose.yml
+
+tulip_jup_twap.tar
