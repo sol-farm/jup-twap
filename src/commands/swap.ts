@@ -58,14 +58,6 @@ export async function swapCommand(args: SwapArgs): Promise<string> {
   if (Number.isNaN(swapAmount) || swapAmount <= 0) {
     throw new Error(`swap amount not valid ${args.amount}`);
   }
-
-  // Check from balance
-  if (!fromBalance || fromBalance < swapAmount) {
-    throw new Error(
-      `from balance not enough for swap, need ${swapAmount} ${fromToken.symbol} only have ${fromBalance} ${fromToken.symbol}`
-    );
-  }
-
   // Check transfer balance
   if (
     toBalance &&
@@ -94,6 +86,14 @@ export async function swapCommand(args: SwapArgs): Promise<string> {
       logger.error(`transfer balance error: ${error}`);
     }
   }
+
+  // Check from balance
+  if (!fromBalance || fromBalance < swapAmount) {
+    throw new Error(
+      `from balance not enough for swap, need ${swapAmount} ${fromToken.symbol} only have ${fromBalance} ${fromToken.symbol}`
+    );
+  }
+
 
   // Check we reach the price to start swap
   if (priceThreshold > 0 && toToken.coinGeckoID) {
